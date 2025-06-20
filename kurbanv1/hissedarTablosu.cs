@@ -48,6 +48,7 @@ namespace kurbanv1
 
         private void btnEkle_Click(object sender, EventArgs e)
         {
+            
             int rakamSayisi = txtTelNo.Text.Count(char.IsDigit);
             if (rakamSayisi != 0 && rakamSayisi != 10)
             {
@@ -65,13 +66,12 @@ namespace kurbanv1
             else
             {
                 baglanti.Open();
-                SqlCommand komut = new SqlCommand("INSERT INTO Hissedarlar (AdSoyad, Telefon, AgirlikAraligi, AtandiMi) VALUES (@ad, @tel, @aralik, 0)", baglanti);
-                komut.Parameters.AddWithValue("@ad", txtAdSoyad.Text);
-                komut.Parameters.AddWithValue("@tel", txtTelNo.Text);
-                komut.Parameters.AddWithValue("@aralik", comboGrup.SelectedItem.ToString());
+                SqlCommand komut = new SqlCommand($"INSERT INTO Hissedarlar (AdSoyad, Telefon, AgirlikAraligi, AtandiMi) VALUES ({txtAdSoyad.Text}, {txtTelNo.Text}, {comboGrup.SelectedItem.ToString()}, 0)", baglanti);
                 komut.ExecuteNonQuery();
                 refreshTable();
                 baglanti.Close();
+
+                // sonraki girdi için textboxları boşalt
                 txtAdSoyad.Text = "";
                 txtTelNo.Text = "";
                 comboGrup.SelectedItem = null;
@@ -96,8 +96,7 @@ namespace kurbanv1
                    
                     baglanti.Open();
                     int seciliID = Convert.ToInt32(secili);
-                    SqlCommand komut = new SqlCommand("DELETE FROM Hissedarlar WHERE ID = @id", baglanti);
-                    komut.Parameters.AddWithValue("@id", seciliID);
+                    SqlCommand komut = new SqlCommand($"DELETE FROM Hissedarlar WHERE ID = {seciliID}", baglanti);
                     komut.ExecuteNonQuery();
 
                     refreshTable();

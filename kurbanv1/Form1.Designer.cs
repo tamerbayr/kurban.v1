@@ -31,7 +31,7 @@
             dataGridView1 = new DataGridView();
             TopAgirlik = new DataGridViewTextBoxColumn();
             etAgirlik = new DataGridViewTextBoxColumn();
-            karkasAgirlik = new DataGridViewTextBoxColumn();
+            artikAgirlik = new DataGridViewTextBoxColumn();
             randiman = new DataGridViewTextBoxColumn();
             hisseKG = new DataGridViewTextBoxColumn();
             hisseAdet = new DataGridViewTextBoxColumn();
@@ -39,10 +39,15 @@
             hissedarlar = new DataGridViewTextBoxColumn();
             textBox1 = new TextBox();
             label1 = new Label();
-            btnKaydet = new Button();
-            btnYukle = new Button();
             btnHissedarTablo = new Button();
             btnHayvanEkle = new Button();
+            label2 = new Label();
+            label3 = new Label();
+            label4 = new Label();
+            txtToplamAgirlik = new MaskedTextBox();
+            txtRandiman = new MaskedTextBox();
+            txtHisseAdet = new MaskedTextBox();
+            btnHayvanSil = new Button();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             SuspendLayout();
             // 
@@ -51,7 +56,7 @@
             dataGridView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
             dataGridView1.BackgroundColor = SystemColors.Control;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView1.Columns.AddRange(new DataGridViewColumn[] { TopAgirlik, etAgirlik, karkasAgirlik, randiman, hisseKG, hisseAdet, durum, hissedarlar });
+            dataGridView1.Columns.AddRange(new DataGridViewColumn[] { TopAgirlik, etAgirlik, artikAgirlik, randiman, hisseKG, hisseAdet, durum, hissedarlar });
             dataGridView1.Location = new Point(12, 12);
             dataGridView1.Name = "dataGridView1";
             dataGridView1.RowTemplate.Height = 25;
@@ -71,11 +76,11 @@
             etAgirlik.HeaderText = "Et";
             etAgirlik.Name = "etAgirlik";
             // 
-            // karkasAgirlik
+            // artikAgirlik
             // 
-            karkasAgirlik.Frozen = true;
-            karkasAgirlik.HeaderText = "Karkas";
-            karkasAgirlik.Name = "karkasAgirlik";
+            artikAgirlik.Frozen = true;
+            artikAgirlik.HeaderText = "Artik";
+            artikAgirlik.Name = "artikAgirlik";
             // 
             // randiman
             // 
@@ -128,30 +133,11 @@
             label1.Text = "Ara:";
             label1.Click += label1_Click;
             // 
-            // btnKaydet
-            // 
-            btnKaydet.Location = new Point(1288, 776);
-            btnKaydet.Name = "btnKaydet";
-            btnKaydet.Size = new Size(83, 36);
-            btnKaydet.TabIndex = 3;
-            btnKaydet.Text = "Kaydet";
-            btnKaydet.UseVisualStyleBackColor = true;
-            btnKaydet.Click += btnKaydet_Click;
-            // 
-            // btnYukle
-            // 
-            btnYukle.Location = new Point(1199, 776);
-            btnYukle.Name = "btnYukle";
-            btnYukle.Size = new Size(83, 36);
-            btnYukle.TabIndex = 4;
-            btnYukle.Text = "Yükle";
-            btnYukle.UseVisualStyleBackColor = true;
-            // 
             // btnHissedarTablo
             // 
-            btnHissedarTablo.Location = new Point(1199, 735);
+            btnHissedarTablo.Location = new Point(1153, 752);
             btnHissedarTablo.Name = "btnHissedarTablo";
-            btnHissedarTablo.Size = new Size(172, 35);
+            btnHissedarTablo.Size = new Size(218, 51);
             btnHissedarTablo.TabIndex = 5;
             btnHissedarTablo.Text = "Hissedar Tablosu";
             btnHissedarTablo.UseVisualStyleBackColor = true;
@@ -159,13 +145,76 @@
             // 
             // btnHayvanEkle
             // 
-            btnHayvanEkle.Location = new Point(1199, 694);
+            btnHayvanEkle.Location = new Point(1153, 354);
             btnHayvanEkle.Name = "btnHayvanEkle";
-            btnHayvanEkle.Size = new Size(172, 35);
+            btnHayvanEkle.Size = new Size(218, 51);
             btnHayvanEkle.TabIndex = 6;
             btnHayvanEkle.Text = "Hayvan Ekle";
             btnHayvanEkle.UseVisualStyleBackColor = true;
             btnHayvanEkle.Click += btnHayvanEkle_Click;
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new Point(1153, 138);
+            label2.Name = "label2";
+            label2.Size = new Size(118, 21);
+            label2.TabIndex = 7;
+            label2.Text = "Toplam Ağırlık:";
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Location = new Point(1153, 210);
+            label3.Name = "label3";
+            label3.Size = new Size(130, 21);
+            label3.TabIndex = 9;
+            label3.Text = "Randıman Oranı:";
+            // 
+            // label4
+            // 
+            label4.AutoSize = true;
+            label4.Location = new Point(1153, 284);
+            label4.Name = "label4";
+            label4.Size = new Size(99, 21);
+            label4.TabIndex = 11;
+            label4.Text = "Hisse Adedi:";
+            // 
+            // txtToplamAgirlik
+            // 
+            txtToplamAgirlik.Location = new Point(1153, 162);
+            txtToplamAgirlik.Mask = "00000";
+            txtToplamAgirlik.Name = "txtToplamAgirlik";
+            txtToplamAgirlik.Size = new Size(218, 26);
+            txtToplamAgirlik.TabIndex = 12;
+            txtToplamAgirlik.ValidatingType = typeof(int);
+            // 
+            // txtRandiman
+            // 
+            txtRandiman.Location = new Point(1153, 234);
+            txtRandiman.Mask = "00000";
+            txtRandiman.Name = "txtRandiman";
+            txtRandiman.Size = new Size(218, 26);
+            txtRandiman.TabIndex = 13;
+            txtRandiman.ValidatingType = typeof(int);
+            // 
+            // txtHisseAdet
+            // 
+            txtHisseAdet.Location = new Point(1153, 308);
+            txtHisseAdet.Mask = "00000";
+            txtHisseAdet.Name = "txtHisseAdet";
+            txtHisseAdet.Size = new Size(218, 26);
+            txtHisseAdet.TabIndex = 14;
+            txtHisseAdet.ValidatingType = typeof(int);
+            // 
+            // btnHayvanSil
+            // 
+            btnHayvanSil.Location = new Point(1153, 411);
+            btnHayvanSil.Name = "btnHayvanSil";
+            btnHayvanSil.Size = new Size(218, 51);
+            btnHayvanSil.TabIndex = 15;
+            btnHayvanSil.Text = "Hayvan Sil";
+            btnHayvanSil.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
@@ -173,10 +222,15 @@
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveBorder;
             ClientSize = new Size(1383, 815);
+            Controls.Add(btnHayvanSil);
+            Controls.Add(txtHisseAdet);
+            Controls.Add(txtRandiman);
+            Controls.Add(txtToplamAgirlik);
+            Controls.Add(label4);
+            Controls.Add(label3);
+            Controls.Add(label2);
             Controls.Add(btnHayvanEkle);
             Controls.Add(btnHissedarTablo);
-            Controls.Add(btnYukle);
-            Controls.Add(btnKaydet);
             Controls.Add(label1);
             Controls.Add(textBox1);
             Controls.Add(dataGridView1);
@@ -196,17 +250,22 @@
         private DataGridView dataGridView1;
         private TextBox textBox1;
         private Label label1;
-        private Button btnKaydet;
-        private Button btnYukle;
+        private Button btnHissedarTablo;
+        private Button btnHayvanEkle;
         private DataGridViewTextBoxColumn TopAgirlik;
         private DataGridViewTextBoxColumn etAgirlik;
-        private DataGridViewTextBoxColumn karkasAgirlik;
+        private DataGridViewTextBoxColumn artikAgirlik;
         private DataGridViewTextBoxColumn randiman;
         private DataGridViewTextBoxColumn hisseKG;
         private DataGridViewTextBoxColumn hisseAdet;
         private DataGridViewComboBoxColumn durum;
         private DataGridViewTextBoxColumn hissedarlar;
-        private Button btnHissedarTablo;
-        private Button btnHayvanEkle;
+        private Label label2;
+        private Label label3;
+        private Label label4;
+        private MaskedTextBox txtToplamAgirlik;
+        private MaskedTextBox txtRandiman;
+        private MaskedTextBox txtHisseAdet;
+        private Button btnHayvanSil;
     }
 }
