@@ -53,6 +53,7 @@
             dataGridView1.Size = new Size(723, 505);
             dataGridView1.TabIndex = 0;
             dataGridView1.RowPostPaint += dataGridView1_RowPostPaint;
+            dataGridView1.SelectionChanged += dataGridView1_SelectionChanged;
             // 
             // comboGrup
             // 
@@ -170,9 +171,11 @@
             Controls.Add(txtAdSoyad);
             Controls.Add(dataGridView1);
             Font = new Font("Sitka Text", 11.249999F, FontStyle.Regular, GraphicsUnit.Point);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             KeyPreview = true;
             Margin = new Padding(4);
             Name = "hissedarTablosu";
+            ShowIcon = false;
             Text = "hissedarTablosu";
             Load += hissedarTablosu_Load;
             KeyDown += hissedarTablosu_KeyDown;

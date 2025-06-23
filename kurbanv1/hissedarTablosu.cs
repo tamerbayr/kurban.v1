@@ -13,11 +13,26 @@ namespace kurbanv1
 {
     public partial class hissedarTablosu : Form
     {
+        DataTable dataGridViewHissedar = new DataTable();
         SqlConnection baglanti = new SqlConnection(@"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;");
         public hissedarTablosu()
         {
             InitializeComponent();
+            hissedarTablosunuYukle();
+        }
 
+        private void hissedarTablosunuYukle()
+        {
+            using (SqlConnection baglanti = new SqlConnection(@"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;"))
+            {
+                SqlDataAdapter da = new SqlDataAdapter("select * from Hayvanlar", baglanti);
+
+                da.Fill(dataGridViewHissedar);
+                dataGridView1.DataSource = dataGridViewHissedar;
+                dataGridView1.Columns[0].Width = 50;
+                dataGridView1.Columns[1].Width = 200;
+                dataGridView1.Columns[2].Width = 200;
+            }
         }
 
         private void refreshTable()
@@ -26,14 +41,14 @@ namespace kurbanv1
             DataTable dt = new DataTable();
             da.Fill(dt);
             dataGridView1.DataSource = dt;
-            dataGridView1.Columns[0].Width = 50;
-            dataGridView1.Columns[1].Width = 200;
-            dataGridView1.Columns[2].Width = 200;
+            
         }
 
         private void hissedarTablosu_Load(object sender, EventArgs e)
         {
             refreshTable();
+            btnSil.Enabled = false;
+            this.MaximizeBox = false;
         }
 
         private void textBox2_TextChanged(object sender, EventArgs e)
@@ -48,7 +63,7 @@ namespace kurbanv1
 
         private void btnEkle_Click(object sender, EventArgs e)
         {
-            
+
             int rakamSayisi = txtTelNo.Text.Count(char.IsDigit);
             if (rakamSayisi != 0 && rakamSayisi != 10)
             {
@@ -66,8 +81,9 @@ namespace kurbanv1
             else
             {
                 baglanti.Open();
-                SqlCommand komut = new SqlCommand($"INSERT INTO Hissedarlar (AdSoyad, Telefon, AgirlikAraligi, AtandiMi) VALUES ({txtAdSoyad.Text}, {txtTelNo.Text}, {comboGrup.SelectedItem.ToString()}, 0)", baglanti);
+                SqlCommand komut = new SqlCommand($"INSERT INTO Hissedarlar (AdSoyad, Telefon, AgirlikAraligi, AtandiMi) VALUES ('{txtAdSoyad.Text}', '{txtTelNo.Text}', '{comboGrup.SelectedItem.ToString()}', 0)",baglanti);
                 komut.ExecuteNonQuery();
+
                 refreshTable();
                 baglanti.Close();
 
@@ -93,7 +109,7 @@ namespace kurbanv1
 
                 if (secili != null)
                 {
-                   
+
                     baglanti.Open();
                     int seciliID = Convert.ToInt32(secili);
                     SqlCommand komut = new SqlCommand($"DELETE FROM Hissedarlar WHERE ID = {seciliID}", baglanti);
@@ -159,6 +175,10 @@ namespace kurbanv1
                             komut2.ExecuteNonQuery();
                         }
 
+                        using (SqlCommand guncelle = new SqlCommand($"UPDATE Hissedarlar SET AtandiMi = 1", baglanti))
+                        {
+                            guncelle.ExecuteNonQuery();
+                        }
                         transaction.Commit();
                         refreshTable();
                     }
@@ -168,6 +188,18 @@ namespace kurbanv1
                         MessageBox.Show("Hata oluştu: " + ex.Message, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
+            }
+        }
+
+        private void dataGridView1_SelectionChanged(object sender, EventArgs e)
+        {
+            if (dataGridView1.SelectedRows.Count > 0)
+            {
+                btnSil.Enabled = true;
+            }
+            else
+            {
+                btnSil.Enabled = false;
             }
         }
 
