@@ -39,6 +39,7 @@
             checkedListBox1.Name = "checkedListBox1";
             checkedListBox1.Size = new Size(458, 361);
             checkedListBox1.TabIndex = 0;
+            checkedListBox1.SelectedIndexChanged += checkedListBox1_SelectedIndexChanged;
             // 
             // btnKaydet
             // 

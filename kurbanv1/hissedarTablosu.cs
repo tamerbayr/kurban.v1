@@ -15,6 +15,7 @@ namespace kurbanv1
     {
         DataTable hissedarTab = new DataTable();
         SqlConnection baglanti = new SqlConnection(@"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;");
+        string connectionString = @"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;";
         public hissedarTablosu()
         {
             InitializeComponent();
@@ -22,9 +23,6 @@ namespace kurbanv1
 
         private void hissedarTablosunuYukle()
         {
-            using (baglanti)
-            {
-                baglanti.Open();
                 SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Hissedarlar", baglanti);
                 hissedarTab.Clear();
                 da.Fill(hissedarTab);
@@ -32,7 +30,6 @@ namespace kurbanv1
                 dataGridView1.Columns[0].Width = (int)(dataGridView1.Width * 0.05);
                 dataGridView1.Columns[2].Width = (int)(dataGridView1.Width * 0.2);
                 dataGridView1.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            }
         }
 
         private void hissedarTablosu_Load(object sender, EventArgs e)
@@ -77,6 +74,12 @@ namespace kurbanv1
 
         private void btnSil_Click(object sender, EventArgs e)
         {
+            DialogResult dr = MessageBox.Show("Seçili hissedarı silmek istediğinize emin misiniz?", "Silme Onayı", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+            if (dr != DialogResult.OK)
+            {
+                return;
+            }
+
             if (dataGridView1.CurrentRow != null)
             {
                 object secili = dataGridView1.CurrentRow.Cells["ID"].Value;
@@ -126,35 +129,45 @@ namespace kurbanv1
 
         private void btnTamSil_Click(object sender, EventArgs e)
         {
-            DialogResult dr = MessageBox.Show("Tüm hissedarları silmek ve ID'leri sıfırlamak istediğinize emin misiniz?", "Silme Onayı", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+            DialogResult dr = MessageBox.Show("Tüm hissedarları silmek ve ID'leri sıfırlamak istediğinize emin misiniz?",
+                "Silme Onayı", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
 
             if (dr == DialogResult.OK)
             {
-                using (baglanti)
+                try
                 {
-                    baglanti.Open();
-                    SqlTransaction transaction = baglanti.BeginTransaction();
-
-                    try
+                    using (SqlConnection conn = new SqlConnection(connectionString))
                     {
-                        using (SqlCommand komut = new SqlCommand("DELETE FROM Hissedarlar", baglanti, transaction))
+                        conn.Open();
+                        using (SqlTransaction transaction = conn.BeginTransaction())
                         {
-                            komut.ExecuteNonQuery();
-                        }
+                            try
+                            {
+                                using (SqlCommand komut = new SqlCommand("DELETE FROM Hissedarlar", conn, transaction))
+                                {
+                                    komut.ExecuteNonQuery();
+                                }
 
-                        using (SqlCommand komut2 = new SqlCommand("DBCC CHECKIDENT('Hissedarlar', RESEED, 0)", baglanti, transaction))
-                        {
-                            komut2.ExecuteNonQuery();
-                        }
+                                using (SqlCommand komut2 = new SqlCommand("DBCC CHECKIDENT('Hissedarlar', RESEED, 0)", conn, transaction))
+                                {
+                                    komut2.ExecuteNonQuery();
+                                }
 
-                        transaction.Commit();
-                        hissedarTablosunuYukle();
+                                transaction.Commit();
+                                MessageBox.Show("Tüm hissedarlar başarıyla silindi.", "Başarılı", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                hissedarTablosunuYukle();
+                            }
+                            catch (Exception ex)
+                            {
+                                transaction.Rollback();
+                                throw;
+                            }
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        transaction.Rollback();
-                        MessageBox.Show("Hata oluştu: " + ex.Message, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Hata oluştu: " + ex.Message, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }

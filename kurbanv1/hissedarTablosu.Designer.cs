@@ -202,7 +202,7 @@
             Margin = new Padding(4);
             Name = "hissedarTablosu";
             ShowIcon = false;
-            Text = "hissedarTablosu";
+            Text = "Hissedar Tablosu";
             Load += hissedarTablosu_Load;
             KeyDown += hissedarTablosu_KeyDown;
             KeyUp += hissedarTablosu_KeyUp;
