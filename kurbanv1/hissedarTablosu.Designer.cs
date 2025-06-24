@@ -39,20 +39,25 @@
             btnSil = new Button();
             btnYenile = new Button();
             btnTamSil = new Button();
+            label4 = new Label();
+            txtAramaKutusu = new TextBox();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             SuspendLayout();
             // 
             // dataGridView1
             // 
+            dataGridView1.AllowUserToAddRows = false;
+            dataGridView1.AllowUserToDeleteRows = false;
             dataGridView1.BackgroundColor = SystemColors.Control;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridView1.Location = new Point(15, 17);
             dataGridView1.Margin = new Padding(4);
             dataGridView1.Name = "dataGridView1";
+            dataGridView1.ReadOnly = true;
             dataGridView1.RowTemplate.Height = 25;
+            dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridView1.Size = new Size(723, 505);
             dataGridView1.TabIndex = 0;
-            dataGridView1.RowPostPaint += dataGridView1_RowPostPaint;
             dataGridView1.SelectionChanged += dataGridView1_SelectionChanged;
             // 
             // comboGrup
@@ -60,7 +65,7 @@
             comboGrup.DropDownStyle = ComboBoxStyle.DropDownList;
             comboGrup.FormattingEnabled = true;
             comboGrup.Items.AddRange(new object[] { "40-45", "45-50", "50-55" });
-            comboGrup.Location = new Point(746, 175);
+            comboGrup.Location = new Point(743, 240);
             comboGrup.Margin = new Padding(4);
             comboGrup.Name = "comboGrup";
             comboGrup.Size = new Size(266, 29);
@@ -69,7 +74,7 @@
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(746, 21);
+            label1.Location = new Point(743, 86);
             label1.Margin = new Padding(4, 0, 4, 0);
             label1.Name = "label1";
             label1.Size = new Size(84, 21);
@@ -79,7 +84,7 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(746, 86);
+            label2.Location = new Point(743, 151);
             label2.Margin = new Padding(4, 0, 4, 0);
             label2.Name = "label2";
             label2.Size = new Size(85, 21);
@@ -89,7 +94,7 @@
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(745, 150);
+            label3.Location = new Point(742, 215);
             label3.Margin = new Padding(4, 0, 4, 0);
             label3.Name = "label3";
             label3.Size = new Size(46, 21);
@@ -98,7 +103,7 @@
             // 
             // txtAdSoyad
             // 
-            txtAdSoyad.Location = new Point(746, 46);
+            txtAdSoyad.Location = new Point(743, 111);
             txtAdSoyad.Margin = new Padding(4);
             txtAdSoyad.Name = "txtAdSoyad";
             txtAdSoyad.Size = new Size(266, 26);
@@ -106,7 +111,7 @@
             // 
             // txtTelNo
             // 
-            txtTelNo.Location = new Point(748, 110);
+            txtTelNo.Location = new Point(745, 175);
             txtTelNo.Mask = "(999) 000-0000";
             txtTelNo.Name = "txtTelNo";
             txtTelNo.Size = new Size(264, 26);
@@ -114,7 +119,7 @@
             // 
             // btnEkle
             // 
-            btnEkle.Location = new Point(748, 226);
+            btnEkle.Location = new Point(745, 291);
             btnEkle.Name = "btnEkle";
             btnEkle.Size = new Size(264, 50);
             btnEkle.TabIndex = 8;
@@ -124,7 +129,7 @@
             // 
             // btnSil
             // 
-            btnSil.Location = new Point(746, 282);
+            btnSil.Location = new Point(743, 347);
             btnSil.Name = "btnSil";
             btnSil.Size = new Size(132, 50);
             btnSil.TabIndex = 9;
@@ -134,7 +139,7 @@
             // 
             // btnYenile
             // 
-            btnYenile.Location = new Point(885, 282);
+            btnYenile.Location = new Point(882, 347);
             btnYenile.Name = "btnYenile";
             btnYenile.Size = new Size(132, 50);
             btnYenile.TabIndex = 10;
@@ -153,12 +158,33 @@
             btnTamSil.Visible = false;
             btnTamSil.Click += btnTamSil_Click;
             // 
+            // label4
+            // 
+            label4.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            label4.AutoSize = true;
+            label4.Location = new Point(747, 22);
+            label4.Name = "label4";
+            label4.Size = new Size(40, 21);
+            label4.TabIndex = 13;
+            label4.Text = "Ara:";
+            // 
+            // txtAramaKutusu
+            // 
+            txtAramaKutusu.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            txtAramaKutusu.Location = new Point(793, 17);
+            txtAramaKutusu.Name = "txtAramaKutusu";
+            txtAramaKutusu.Size = new Size(172, 26);
+            txtAramaKutusu.TabIndex = 12;
+            txtAramaKutusu.TextChanged += txtAramaKutusu_TextChanged_1;
+            // 
             // hissedarTablosu
             // 
             AutoScaleDimensions = new SizeF(9F, 21F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.ActiveBorder;
             ClientSize = new Size(1029, 630);
+            Controls.Add(label4);
+            Controls.Add(txtAramaKutusu);
             Controls.Add(btnTamSil);
             Controls.Add(btnYenile);
             Controls.Add(btnSil);
@@ -198,5 +224,7 @@
         private Button btnSil;
         private Button btnYenile;
         private Button btnTamSil;
+        private Label label4;
+        private TextBox txtAramaKutusu;
     }
 }

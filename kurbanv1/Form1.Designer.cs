@@ -49,6 +49,7 @@
             // dataGridView1
             // 
             dataGridView1.AllowUserToAddRows = false;
+            dataGridView1.AllowUserToDeleteRows = false;
             dataGridView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
             dataGridView1.BackgroundColor = SystemColors.Control;
@@ -61,7 +62,6 @@
             dataGridView1.TabIndex = 0;
             dataGridView1.CellFormatting += dataGridView1_CellFormatting;
             dataGridView1.SelectionChanged += dataGridView1_SelectionChanged;
-            dataGridView1.SizeChanged += dataGridView1_SizeChanged;
             // 
             // txtAramaKutusu
             // 

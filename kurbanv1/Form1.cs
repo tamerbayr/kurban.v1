@@ -1,11 +1,5 @@
-using Microsoft.VisualBasic;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Data.SqlTypes;
-using System.Drawing;
-using System.Windows.Forms;
-using static System.ComponentModel.Design.ObjectSelectorEditor;
 
 namespace kurbanv1
 {
@@ -20,17 +14,15 @@ namespace kurbanv1
             hayvanTablosunuYukle();
             btnYenile.Visible = false;
             btnTamSil.Visible = false;
-
         }
+
         public void hayvanTablosunuYukle()
         {
             using (SqlConnection baglanti = new SqlConnection(connectionString))
             {
                 baglanti.Open();
-                // komutlar burada
-                try
-                {
-                    SqlCommand sqlcommand = new SqlCommand(@"SELECT 
+                /*  bu da çalışıyor
+                SqlCommand sqlcommand = new SqlCommand(@"SELECT 
                                      H.Id AS HayvanID, 
                                      H.Agirlik, 
                                      H.RandimanOrani, 
@@ -44,17 +36,39 @@ namespace kurbanv1
                                      LEFT JOIN Hissedarlar Hs ON Hs.Id = HH.HissedarID
                                      GROUP BY H.Id, H.Agirlik, H.RandimanOrani, H.ToplamEt, H.KisiBasiEt, H.HissedarAdedi
                                      ORDER BY H.Id", baglanti);
-                    SqlDataAdapter da = new SqlDataAdapter(sqlcommand);
-                    hayvanTablosu.Clear();
-                    da.Fill(hayvanTablosu);
-                    dataGridView1.DataSource = hayvanTablosu;
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Hata oluştu: \n" + ex.Message);
-                }
+                SqlDataAdapter da = new SqlDataAdapter(sqlcommand);
+                hayvanTablosu.Clear();
+                da.Fill(hayvanTablosu);
+                dataGridView1.DataSource = hayvanTablosu;
+                */
+                SqlDataAdapter da = new SqlDataAdapter(@"SELECT 
+                                     H.Id AS HayvanID, 
+                                     H.Agirlik, 
+                                     H.RandimanOrani, 
+                                     H.ToplamEt,
+                                     H.KisiBasiEt,
+                                     H.HissedarAdedi AS BeklenenHissedarSayisi,
+                                     COUNT(DISTINCT HH.HissedarID) AS AtananHissedarSayisi,
+                                     ISNULL(STRING_AGG(Hs.AdSoyad + ' (' + Hs.Telefon + ')', ', '), 'Atama Yok') AS Hissedarlar
+                                     FROM Hayvanlar H
+                                     LEFT JOIN HayvanHissedar HH ON H.Id = HH.HayvanID
+                                     LEFT JOIN Hissedarlar Hs ON Hs.Id = HH.HissedarID
+                                     GROUP BY H.Id, H.Agirlik, H.RandimanOrani, H.ToplamEt, H.KisiBasiEt, H.HissedarAdedi
+                                     ORDER BY H.Id", baglanti);
+                DataTable dt = new DataTable();
+                da.Fill(dt);
+                dataGridView1.DataSource = dt;
+
+                // nedense boyutları düzenlemiyor
+                dataGridView1.Columns[0].Width = (int)(dataGridView1.Width * 0.05);
+                dataGridView1.Columns[1].Width = (int)(dataGridView1.Width * 0.1);
+                dataGridView1.Columns[2].Width = (int)(dataGridView1.Width * 0.1);
+                dataGridView1.Columns[3].Width = (int)(dataGridView1.Width * 0.1);
+                dataGridView1.Columns[4].Width = (int)(dataGridView1.Width * 0.1);
+                dataGridView1.Columns[5].Width = (int)(dataGridView1.Width * 0.05);
+                dataGridView1.Columns[6].Width = (int)(dataGridView1.Width * 0.05);
+                dataGridView1.Columns[7].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             }
-            
         }
 
         private void btnHissedarTablo_Click(object sender, EventArgs e)
@@ -82,18 +96,18 @@ namespace kurbanv1
             int randimanRakamSayisi = txtRandiman.Text.Count(char.IsDigit);
             if (randimanRakamSayisi <= 1 || randimanRakamSayisi > 3)
             {
-                MessageBox.Show("Randıman bölümü boş olamaz.", "Hata!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Randıman bölümü hatalı girildi.", "Hata!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             int randimanDegeri = Convert.ToInt32(txtRandiman.Text.Trim());
             if (randimanDegeri < 0 || randimanDegeri > 100)
             {
-                MessageBox.Show("Randıman hatalı girildi. %0 ile %100 arasında olmalıdır.", "Hata!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Randıman hatalı girildi.", "Hata!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            int hisseRakamSayisi = txtHisseAdet.Text.Count(char.IsDigit);
-            if (hisseRakamSayisi != 1)
+            int hisseDegeri = Convert.ToInt32(txtHisseAdet.Text.Trim());
+            if (hisseDegeri < 1 || hisseDegeri > 20)
             {
                 MessageBox.Show("Hisse adet bölümü hatalı.", "Hata!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -123,16 +137,14 @@ namespace kurbanv1
                 DialogResult dr1 = MessageBox.Show($"Kişi başı et miktarı {kisiBasiEt}KG minimum değerden az. 40-45 grubuna eklensin mi?", "Uyarı!", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
                 if (dr1 == DialogResult.OK)
                     grupTabloAdi = "40-45";
-                else
-                    return;
+                else { return; }
             }
             else if (kisiBasiEt > 55)
             {
                 DialogResult dr1 = MessageBox.Show($"Kişi başı et miktarı {kisiBasiEt}KG maksimum değerden fazla. 50-55 grubuna eklensin mi?", "Uyarı!", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
                 if (dr1 == DialogResult.OK)
                     grupTabloAdi = "50-55";
-                else
-                    return;
+                else { return; }
             }
             else
             {
@@ -141,93 +153,65 @@ namespace kurbanv1
             }
 
             // veritabanı işlemi
-            try
+            using (SqlConnection baglanti = new SqlConnection(connectionString))
             {
-                using (SqlConnection baglanti = new SqlConnection(connectionString))
+                baglanti.Open();
+                SqlCommand hisseKomut = new SqlCommand($"SELECT TOP {hisseAdet} * FROM Hissedarlar WHERE AtandiMi = 0 AND AgirlikAraligi = '{grupTabloAdi}'", baglanti);
+                SqlDataReader dr = hisseKomut.ExecuteReader();
+
+                // hisse adedi kadar boş hissedar çek
+                List<int> hissedarIDs = new List<int>();
+                while (dr.Read())
                 {
-                    baglanti.Open();
-                    SqlCommand hisseKomut = new SqlCommand($"SELECT TOP {hisseAdet} * FROM Hissedarlar WHERE AtandiMi = 0 AND AgirlikAraligi = '{grupTabloAdi}'", baglanti);
-                    SqlDataReader dr = hisseKomut.ExecuteReader();
-
-                    // hisse adedi kadar boş hissedar çek
-                    List<int> hissedarIDs = new List<int>();
-                    while (dr.Read())
-                    {
-                        hissedarIDs.Add(Convert.ToInt32(dr["ID"]));
-                    }
-                    dr.Close();
-
-                    // hissedar tablosu boş ise
-                    if (hissedarIDs.Count == 0) { MessageBox.Show("Hissedar sayısı 0. Atama yapılamadı", "Hata!"); return; }
-
-                    // hayvan ekle
-                    SqlCommand hayvanKomut = new SqlCommand($"INSERT INTO Hayvanlar (Agirlik, RandimanOrani, HissedarAdedi, ToplamEt, KisiBasiEt) VALUES ({toplamAgirlik}, {randimanOran}, {hisseAdet}, {toplamEt}, {kisiBasiEt}); SELECT SCOPE_IDENTITY();", baglanti);
-                    int yeniHayvanID = Convert.ToInt32(hayvanKomut.ExecuteScalar());
-
-                    // hissedar sayısı yetersiz ise uyarı (evet dendiğinde devam ediyor)
-                    if (hissedarIDs.Count < hisseAdet)
-                    {
-                        DialogResult dr1 = MessageBox.Show($"İstenen hissedar sayısı ({hisseAdet}), kalan hissedar sayısından ({hissedarIDs.Count}) fazla.\nDevam edilsin mi?", "Eksik Hissedar", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                        if (dr1 == DialogResult.Yes)
-                        {
-                            foreach (int id in hissedarIDs)
-                            {
-                                // HayvanHissedar tablosuna ekleme
-                                SqlCommand ekle = new SqlCommand("INSERT INTO HayvanHissedar (HayvanID, HissedarID) VALUES (@hayvanID, @hissedarID)", baglanti);
-                                ekle.Parameters.AddWithValue("@hayvanID", yeniHayvanID);
-                                ekle.Parameters.AddWithValue("@hissedarID", id);
-                                ekle.ExecuteNonQuery();
-
-                                // AtandiMi güncelle
-                                SqlCommand guncelle = new SqlCommand("UPDATE Hissedarlar SET AtandiMi = 1 WHERE Id = @id", baglanti);
-                                guncelle.Parameters.AddWithValue("@id", id);
-                                guncelle.ExecuteNonQuery();
-                            }
-                        }
-                    }
-                    else // SORUN BURADA: Yeterli hissedar olduğunda AtandiMi güncellenmiyor
-                    {
-                        foreach (int id in hissedarIDs)
-                        {
-                            // HayvanHissedar tablosuna ekleme
-                            SqlCommand ekle = new SqlCommand("INSERT INTO HayvanHissedar (HayvanID, HissedarID) VALUES (@hayvanID, @hissedarID)", baglanti);
-                            ekle.Parameters.AddWithValue("@hayvanID", yeniHayvanID);
-                            ekle.Parameters.AddWithValue("@hissedarID", id);
-                            ekle.ExecuteNonQuery();
-
-                            // AtandiMi güncelleme EKSİKTİ - Bu satırlar eklenmeli:
-                            SqlCommand guncelle = new SqlCommand("UPDATE Hissedarlar SET AtandiMi = 1 WHERE Id = @id", baglanti);
-                            guncelle.Parameters.AddWithValue("@id", id);
-                            guncelle.ExecuteNonQuery();
-                        }
-                    }
-                    txtHisseAdet.Text = "";
-                    txtToplamAgirlik.Text = "";
-                    txtRandiman.Text = "";
-                    hayvanTablosunuYukle();
+                    hissedarIDs.Add(Convert.ToInt32(dr["ID"]));
                 }
-                
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Hata oluştu: \n" + ex.Message);
+                dr.Close();
+
+                // hissedar tablosu boş ise
+                if (hissedarIDs.Count == 0) { MessageBox.Show("Hissedar sayısı 0. Atama yapılamadı", "Hata!"); return; }
+
+                // hissedar sayısı yetersiz ise uyarı (evet dendiğinde devam ediyor)
+                if (hissedarIDs.Count < hisseAdet)
+                {
+                    DialogResult dr1 = MessageBox.Show($"İstenen hissedar sayısı ({hisseAdet}), kalan hissedar sayısından ({hissedarIDs.Count}) fazla.\nDevam edilsin mi?", "Eksik Hissedar", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (dr1 == DialogResult.No) { return; }
+                }
+
+                // hayvan tablosuna ekle
+                SqlCommand hayvanKomut = new SqlCommand($"INSERT INTO Hayvanlar (Agirlik, RandimanOrani, HissedarAdedi, ToplamEt, KisiBasiEt) VALUES ({toplamAgirlik}, {randimanOran}, {hisseAdet}, {toplamEt}, {kisiBasiEt}); SELECT SCOPE_IDENTITY();", baglanti);
+
+                // hayvanhissedar ilişki tablosuna ekle
+                int yeniHayvanID = Convert.ToInt32(hayvanKomut.ExecuteScalar());
+                foreach (int id in hissedarIDs)
+                {
+                    SqlCommand ekle = new SqlCommand("INSERT INTO HayvanHissedar (HayvanID, HissedarID) VALUES (@hayvanID, @hissedarID)", baglanti);
+                    ekle.Parameters.AddWithValue("@hayvanID", yeniHayvanID);
+                    ekle.Parameters.AddWithValue("@hissedarID", id);
+                    ekle.ExecuteNonQuery();
+
+                    // AtandiMi güncelle
+                    SqlCommand guncelle = new SqlCommand("UPDATE Hissedarlar SET AtandiMi = 1 WHERE Id = @id", baglanti);
+                    guncelle.Parameters.AddWithValue("@id", id);
+                    guncelle.ExecuteNonQuery();
+                }
+                txtHisseAdet.Text = "";
+                txtToplamAgirlik.Text = "";
+                txtRandiman.Text = "";
+                hayvanTablosunuYukle();
             }
         }
         private void txtAramaKutusu_TextChanged(object sender, EventArgs e)
         {
-            string filtre = txtAramaKutusu.Text.Trim();
-
             DataView dv = hayvanTablosu.DefaultView;
 
-            if (string.IsNullOrEmpty(filtre))
+            if (txtAramaKutusu.Text.Trim() == "")
             {
-                dv.RowFilter = ""; // Filtreyi sıfırla
+                dv.RowFilter = "";
             }
             else
             {
-                dv.RowFilter = $"Hissedarlar LIKE '%{filtre}%'";
+                dv.RowFilter = $"Hissedarlar LIKE '%{txtAramaKutusu.Text.Trim()}%'";
             }
-
             dataGridView1.DataSource = dv;
         }
 
@@ -240,37 +224,28 @@ namespace kurbanv1
             }
 
             DialogResult dr = MessageBox.Show("Seçili hayvanı silmek istediğinize emin misiniz?", "Silme Onayı", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (dr == DialogResult.No)
-                return;
-
+            if (dr != DialogResult.Yes) { return; }
             int hayvanID = Convert.ToInt32(dataGridView1.CurrentRow.Cells["HayvanID"].Value);
 
-            using (SqlConnection baglanti = new SqlConnection(@"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;"))
+            using (SqlConnection baglanti = new SqlConnection(connectionString))
             {
                 baglanti.Open();
 
-                // önce atandimi'leri sıfırla
-                SqlCommand updateAtandi = new SqlCommand(
-                    $"UPDATE Hissedarlar SET AtandiMi = 0 WHERE Id IN (SELECT HissedarID FROM HayvanHissedar WHERE HayvanID = {hayvanID})",
-                    baglanti);
+                // atanan hissedar atandimi 0 yap
+                SqlCommand updateAtandi = new SqlCommand($"UPDATE Hissedarlar SET AtandiMi = 0 WHERE Id IN (SELECT HissedarID FROM HayvanHissedar WHERE HayvanID = {hayvanID})", baglanti);
                 updateAtandi.ExecuteNonQuery();
 
-                // sonra hayvanhissedar tablosundan kayıtları sil
-                SqlCommand silHissedarlar = new SqlCommand(
-                    $"DELETE FROM HayvanHissedar WHERE HayvanID = {hayvanID}", baglanti);
+                // hayvanhissedar ilişki tablosundan sil
+                SqlCommand silHissedarlar = new SqlCommand($"DELETE FROM HayvanHissedar WHERE HayvanID = {hayvanID}", baglanti);
                 silHissedarlar.ExecuteNonQuery();
 
-                // sonra hayvanlar tablosundan hayvanı sil
-                SqlCommand silHayvan = new SqlCommand(
-                    $"DELETE FROM Hayvanlar WHERE Id = {hayvanID}", baglanti);
+                // hayvanlar tablosundan sil
+                SqlCommand silHayvan = new SqlCommand($"DELETE FROM Hayvanlar WHERE Id = {hayvanID}", baglanti);
                 silHayvan.ExecuteNonQuery();
-
 
                 baglanti.Close();
             }
             hayvanTablosunuYukle();
-
-
         }
 
         private void yenile_Click(object sender, EventArgs e)
@@ -278,6 +253,7 @@ namespace kurbanv1
             hayvanTablosunuYukle();
         }
 
+        // gizli butonlar gösterme
         private void Form1_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.ShiftKey)
@@ -302,7 +278,6 @@ namespace kurbanv1
 
             if (dr == DialogResult.OK)
             {
-                string connectionString = @"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;";
                 using (SqlConnection baglanti = new SqlConnection(connectionString))
                 {
                     baglanti.Open();
@@ -364,9 +339,6 @@ namespace kurbanv1
         private void Form1_Load(object sender, EventArgs e)
         {
             hayvanTablosunuYukle();
-            dataGridView1.SelectionChanged += dataGridView1_SelectionChanged;
-
-
         }
 
         private void dataGridView1_SelectionChanged(object sender, EventArgs e)
@@ -374,24 +346,8 @@ namespace kurbanv1
             btnDuzenle.Enabled = dataGridView1.SelectedRows.Count > 0;
         }
 
-        private void dataGridView1_SizeChanged(object sender, EventArgs e)
-        {
-
-            dataGridView1.Columns[0].Width = (int)(dataGridView1.Width * 0.1);
-            dataGridView1.Columns[1].Width = (int)(dataGridView1.Width * 0.1);
-            dataGridView1.Columns[2].Width = (int)(dataGridView1.Width * 0.1);
-            dataGridView1.Columns[3].Width = (int)(dataGridView1.Width * 0.1);
-            dataGridView1.Columns[4].Width = (int)(dataGridView1.Width * 0.1);
-            dataGridView1.Columns[5].Width = (int)(dataGridView1.Width * 0.1);
-            dataGridView1.Columns[6].Width = (int)(dataGridView1.Width * 0.1);
-            dataGridView1.Columns[7].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-
-        }
-
         private void dataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
-            
-            // Eğer ilgili hücreler null değilse işleme devam et
             if (dataGridView1.Columns.Count >= 5 && e.RowIndex >= 0)
             {
                 // Hissedar sayısı olan hücreden değerleri al
@@ -410,7 +366,6 @@ namespace kurbanv1
                     dataGridView1.Rows[e.RowIndex].DefaultCellStyle.ForeColor = Color.Black;
                 }
             }
-            
         }
     }
 }

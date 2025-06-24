@@ -13,52 +13,33 @@ namespace kurbanv1
 {
     public partial class hissedarTablosu : Form
     {
-        DataTable dataGridViewHissedar = new DataTable();
+        DataTable hissedarTab = new DataTable();
         SqlConnection baglanti = new SqlConnection(@"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;");
         public hissedarTablosu()
         {
             InitializeComponent();
-            hissedarTablosunuYukle();
         }
 
         private void hissedarTablosunuYukle()
         {
-            using (SqlConnection baglanti = new SqlConnection(@"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;"))
+            using (baglanti)
             {
-                SqlDataAdapter da = new SqlDataAdapter("select * from Hayvanlar", baglanti);
-
-                da.Fill(dataGridViewHissedar);
-                dataGridView1.DataSource = dataGridViewHissedar;
-                dataGridView1.Columns[0].Width = 50;
-                dataGridView1.Columns[1].Width = 200;
-                dataGridView1.Columns[2].Width = 200;
+                baglanti.Open();
+                SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Hissedarlar", baglanti);
+                hissedarTab.Clear();
+                da.Fill(hissedarTab);
+                dataGridView1.DataSource = hissedarTab;
+                dataGridView1.Columns[0].Width = (int)(dataGridView1.Width * 0.05);
+                dataGridView1.Columns[2].Width = (int)(dataGridView1.Width * 0.2);
+                dataGridView1.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             }
-        }
-
-        private void refreshTable()
-        {
-            SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM Hissedarlar", baglanti);
-            DataTable dt = new DataTable();
-            da.Fill(dt);
-            dataGridView1.DataSource = dt;
-            
         }
 
         private void hissedarTablosu_Load(object sender, EventArgs e)
         {
-            refreshTable();
+            hissedarTablosunuYukle();
             btnSil.Enabled = false;
             this.MaximizeBox = false;
-        }
-
-        private void textBox2_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
         }
 
         private void btnEkle_Click(object sender, EventArgs e)
@@ -76,15 +57,15 @@ namespace kurbanv1
             }
             else if (comboGrup.SelectedItem == null)
             {
-                MessageBox.Show("Grup seçimi boş olamaz", "Hata!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Grup seçimi boş olamaz.", "Hata!", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
                 baglanti.Open();
-                SqlCommand komut = new SqlCommand($"INSERT INTO Hissedarlar (AdSoyad, Telefon, AgirlikAraligi, AtandiMi) VALUES ('{txtAdSoyad.Text}', '{txtTelNo.Text}', '{comboGrup.SelectedItem.ToString()}', 0)",baglanti);
+                SqlCommand komut = new SqlCommand($"INSERT INTO Hissedarlar (AdSoyad, Telefon, AgirlikAraligi, AtandiMi) VALUES ('{txtAdSoyad.Text}', '{txtTelNo.Text}', '{comboGrup.SelectedItem.ToString()}', 0)", baglanti);
                 komut.ExecuteNonQuery();
 
-                refreshTable();
+                hissedarTablosunuYukle();
                 baglanti.Close();
 
                 // sonraki girdi için textboxları boşalt
@@ -92,13 +73,6 @@ namespace kurbanv1
                 txtTelNo.Text = "";
                 comboGrup.SelectedItem = null;
             }
-
-
-        }
-
-        private void dataGridView1_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
-        {
-
         }
 
         private void btnSil_Click(object sender, EventArgs e)
@@ -109,13 +83,12 @@ namespace kurbanv1
 
                 if (secili != null)
                 {
-
                     baglanti.Open();
                     int seciliID = Convert.ToInt32(secili);
                     SqlCommand komut = new SqlCommand($"DELETE FROM Hissedarlar WHERE ID = {seciliID}", baglanti);
                     komut.ExecuteNonQuery();
 
-                    refreshTable();
+                    hissedarTablosunuYukle();
                     baglanti.Close();
                 }
                 else
@@ -129,12 +102,12 @@ namespace kurbanv1
             }
         }
 
-
         private void btnYenile_Click(object sender, EventArgs e)
         {
-            refreshTable();
+            hissedarTablosunuYukle();
         }
 
+        // gizli tuşları gösterme
         private void hissedarTablosu_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.ShiftKey)
@@ -157,8 +130,7 @@ namespace kurbanv1
 
             if (dr == DialogResult.OK)
             {
-                string connectionString = @"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;";
-                using (SqlConnection baglanti = new SqlConnection(connectionString))
+                using (baglanti)
                 {
                     baglanti.Open();
                     SqlTransaction transaction = baglanti.BeginTransaction();
@@ -175,12 +147,8 @@ namespace kurbanv1
                             komut2.ExecuteNonQuery();
                         }
 
-                        using (SqlCommand guncelle = new SqlCommand($"UPDATE Hissedarlar SET AtandiMi = 1", baglanti))
-                        {
-                            guncelle.ExecuteNonQuery();
-                        }
                         transaction.Commit();
-                        refreshTable();
+                        hissedarTablosunuYukle();
                     }
                     catch (Exception ex)
                     {
@@ -203,5 +171,20 @@ namespace kurbanv1
             }
         }
 
+        private void txtAramaKutusu_TextChanged_1(object sender, EventArgs e)
+        {
+            DataView dv = hissedarTab.DefaultView;
+
+            if (string.IsNullOrWhiteSpace(txtAramaKutusu.Text))
+            {
+                dv.RowFilter = "";
+            }
+            else
+            {
+                dv.RowFilter = $"AdSoyad LIKE '%{txtAramaKutusu.Text.Trim()}%'";
+            }
+
+            dataGridView1.DataSource = dv;
+        }
     }
 }
