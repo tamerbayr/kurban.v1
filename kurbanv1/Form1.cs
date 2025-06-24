@@ -1,3 +1,4 @@
+using Microsoft.VisualBasic.ApplicationServices;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -7,7 +8,9 @@ namespace kurbanv1
     {
 
         private DataTable hayvanTablosu = new DataTable();
-        string connectionString = @"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;";
+        static string data = Application.StartupPath;
+        static string connectionString = @$"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename={data}\kurbanDB.mdf;Initial Catalog=kurbanDB;Integrated Security=True;";
+        SqlConnection baglanti = new SqlConnection(connectionString);
 
 
         public Form1()
@@ -20,10 +23,11 @@ namespace kurbanv1
 
         public void hayvanTablosunuYukle()
         {
-            SqlConnection baglanti = new SqlConnection(connectionString);
-
-            baglanti.Open();
-            SqlCommand sqlcommand = new SqlCommand(@"SELECT 
+            string dbPath =  @$"{AppDomain.CurrentDomain.BaseDirectory}\kurbanDB.mdf";
+            using (baglanti)
+            {
+                baglanti.Open();
+                SqlCommand sqlcommand = new SqlCommand(@"SELECT 
                                      H.Id AS HayvanID, 
                                      H.Agirlik, 
                                      H.RandimanOrani, 
@@ -37,21 +41,22 @@ namespace kurbanv1
                                      LEFT JOIN Hissedarlar Hs ON Hs.Id = HH.HissedarID
                                      GROUP BY H.Id, H.Agirlik, H.RandimanOrani, H.ToplamEt, H.KisiBasiEt, H.HissedarAdedi
                                      ORDER BY H.Id", baglanti);
-            SqlDataAdapter da = new SqlDataAdapter(sqlcommand);
-            hayvanTablosu.Clear();
-            da.Fill(hayvanTablosu);
-            dataGridView1.DataSource = hayvanTablosu;
+                SqlDataAdapter da = new SqlDataAdapter(sqlcommand);
+                hayvanTablosu.Clear();
+                da.Fill(hayvanTablosu);
+                dataGridView1.DataSource = hayvanTablosu;
 
-            // nedense boyutları düzenlemiyor
-            dataGridView1.Columns[0].Width = (int)(dataGridView1.Width * 0.05);
-            dataGridView1.Columns[1].Width = (int)(dataGridView1.Width * 0.1);
-            dataGridView1.Columns[2].Width = (int)(dataGridView1.Width * 0.1);
-            dataGridView1.Columns[3].Width = (int)(dataGridView1.Width * 0.1);
-            dataGridView1.Columns[4].Width = (int)(dataGridView1.Width * 0.1);
-            dataGridView1.Columns[5].Width = (int)(dataGridView1.Width * 0.05);
-            dataGridView1.Columns[6].Width = (int)(dataGridView1.Width * 0.05);
-            dataGridView1.Columns[7].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            baglanti.Close();
+                // nedense boyutları düzenlemiyor
+                dataGridView1.Columns[0].Width = (int)(dataGridView1.Width * 0.05);
+                dataGridView1.Columns[1].Width = (int)(dataGridView1.Width * 0.1);
+                dataGridView1.Columns[2].Width = (int)(dataGridView1.Width * 0.1);
+                dataGridView1.Columns[3].Width = (int)(dataGridView1.Width * 0.1);
+                dataGridView1.Columns[4].Width = (int)(dataGridView1.Width * 0.1);
+                dataGridView1.Columns[5].Width = (int)(dataGridView1.Width * 0.05);
+                dataGridView1.Columns[6].Width = (int)(dataGridView1.Width * 0.05);
+                dataGridView1.Columns[7].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                baglanti.Close();
+            }
         }
 
 
@@ -137,52 +142,54 @@ namespace kurbanv1
             }
 
             // veritabanı işlemi
-            SqlConnection baglanti = new SqlConnection(connectionString);
-
-            baglanti.Open();
-            SqlCommand hisseKomut = new SqlCommand($"SELECT TOP {hisseAdet} * FROM Hissedarlar WHERE AtandiMi = 0 AND AgirlikAraligi = '{grupTabloAdi}'", baglanti);
-            SqlDataReader dr = hisseKomut.ExecuteReader();
-
-            // hisse adedi kadar boş hissedar çek
-            List<int> hissedarIDs = new List<int>();
-            while (dr.Read())
+            string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "kurbanDB.mdf");
+            using (baglanti)
             {
-                hissedarIDs.Add(Convert.ToInt32(dr["ID"]));
+                baglanti.Open();
+                SqlCommand hisseKomut = new SqlCommand($"SELECT TOP {hisseAdet} * FROM Hissedarlar WHERE AtandiMi = 0 AND AgirlikAraligi = '{grupTabloAdi}'", baglanti);
+                SqlDataReader dr = hisseKomut.ExecuteReader();
+
+                // hisse adedi kadar boş hissedar çek
+                List<int> hissedarIDs = new List<int>();
+                while (dr.Read())
+                {
+                    hissedarIDs.Add(Convert.ToInt32(dr["ID"]));
+                }
+                dr.Close();
+
+                // hissedar tablosu boş ise
+                if (hissedarIDs.Count == 0) { MessageBox.Show("Hissedar sayısı 0. Atama yapılamadı", "Hata!"); baglanti.Close(); return; }
+
+                // hissedar sayısı yetersiz ise uyarı (evet dendiğinde devam ediyor)
+                if (hissedarIDs.Count < hisseAdet)
+                {
+                    DialogResult dr1 = MessageBox.Show($"İstenen hissedar sayısı ({hisseAdet}), kalan hissedar sayısından ({hissedarIDs.Count}) fazla.\nDevam edilsin mi?", "Eksik Hissedar", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (dr1 == DialogResult.No) { baglanti.Close(); return; }
+                }
+
+                // hayvan tablosuna ekle
+                SqlCommand hayvanKomut = new SqlCommand($"INSERT INTO Hayvanlar (Agirlik, RandimanOrani, HissedarAdedi, ToplamEt, KisiBasiEt) VALUES ({toplamAgirlik}, {randimanOran}, {hisseAdet}, {toplamEt}, {kisiBasiEt}); SELECT SCOPE_IDENTITY();", baglanti);
+
+                // hayvanhissedar ilişki tablosuna ekle
+                int yeniHayvanID = Convert.ToInt32(hayvanKomut.ExecuteScalar());
+                foreach (int id in hissedarIDs)
+                {
+                    SqlCommand ekle = new SqlCommand("INSERT INTO HayvanHissedar (HayvanID, HissedarID) VALUES (@hayvanID, @hissedarID)", baglanti);
+                    ekle.Parameters.AddWithValue("@hayvanID", yeniHayvanID);
+                    ekle.Parameters.AddWithValue("@hissedarID", id);
+                    ekle.ExecuteNonQuery();
+
+                    // AtandiMi güncelle
+                    SqlCommand guncelle = new SqlCommand("UPDATE Hissedarlar SET AtandiMi = 1 WHERE Id = @id", baglanti);
+                    guncelle.Parameters.AddWithValue("@id", id);
+                    guncelle.ExecuteNonQuery();
+                }
+                txtHisseAdet.Text = "";
+                txtToplamAgirlik.Text = "";
+                txtRandiman.Text = "";
+                hayvanTablosunuYukle();
+                baglanti.Close();
             }
-            dr.Close();
-
-            // hissedar tablosu boş ise
-            if (hissedarIDs.Count == 0) { MessageBox.Show("Hissedar sayısı 0. Atama yapılamadı", "Hata!"); return; }
-
-            // hissedar sayısı yetersiz ise uyarı (evet dendiğinde devam ediyor)
-            if (hissedarIDs.Count < hisseAdet)
-            {
-                DialogResult dr1 = MessageBox.Show($"İstenen hissedar sayısı ({hisseAdet}), kalan hissedar sayısından ({hissedarIDs.Count}) fazla.\nDevam edilsin mi?", "Eksik Hissedar", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                if (dr1 == DialogResult.No) { return; }
-            }
-
-            // hayvan tablosuna ekle
-            SqlCommand hayvanKomut = new SqlCommand($"INSERT INTO Hayvanlar (Agirlik, RandimanOrani, HissedarAdedi, ToplamEt, KisiBasiEt) VALUES ({toplamAgirlik}, {randimanOran}, {hisseAdet}, {toplamEt}, {kisiBasiEt}); SELECT SCOPE_IDENTITY();", baglanti);
-
-            // hayvanhissedar ilişki tablosuna ekle
-            int yeniHayvanID = Convert.ToInt32(hayvanKomut.ExecuteScalar());
-            foreach (int id in hissedarIDs)
-            {
-                SqlCommand ekle = new SqlCommand("INSERT INTO HayvanHissedar (HayvanID, HissedarID) VALUES (@hayvanID, @hissedarID)", baglanti);
-                ekle.Parameters.AddWithValue("@hayvanID", yeniHayvanID);
-                ekle.Parameters.AddWithValue("@hissedarID", id);
-                ekle.ExecuteNonQuery();
-
-                // AtandiMi güncelle
-                SqlCommand guncelle = new SqlCommand("UPDATE Hissedarlar SET AtandiMi = 1 WHERE Id = @id", baglanti);
-                guncelle.Parameters.AddWithValue("@id", id);
-                guncelle.ExecuteNonQuery();
-            }
-            txtHisseAdet.Text = "";
-            txtToplamAgirlik.Text = "";
-            txtRandiman.Text = "";
-            hayvanTablosunuYukle();
-            baglanti.Close();
         }
 
         private void txtAramaKutusu_TextChanged(object sender, EventArgs e)
@@ -205,31 +212,33 @@ namespace kurbanv1
             if (dataGridView1.SelectedRows.Count == 0)
             {
                 MessageBox.Show("Silmek için bir hayvan seçiniz.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
                 return;
             }
 
             DialogResult dr = MessageBox.Show("Seçili hayvanı silmek istediğinize emin misiniz?", "Silme Onayı", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (dr != DialogResult.Yes) { return; }
             int hayvanID = Convert.ToInt32(dataGridView1.CurrentRow.Cells["HayvanID"].Value);
+            string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "kurbanDB.mdf");
 
-            SqlConnection baglanti = new SqlConnection(connectionString);
+            using (baglanti)
+            {
+                baglanti.Open();
 
-            baglanti.Open();
+                // atanan hissedar atandimi 0 yap
+                SqlCommand updateAtandi = new SqlCommand($"UPDATE Hissedarlar SET AtandiMi = 0 WHERE Id IN (SELECT HissedarID FROM HayvanHissedar WHERE HayvanID = {hayvanID})", baglanti);
+                updateAtandi.ExecuteNonQuery();
 
-            // atanan hissedar atandimi 0 yap
-            SqlCommand updateAtandi = new SqlCommand($"UPDATE Hissedarlar SET AtandiMi = 0 WHERE Id IN (SELECT HissedarID FROM HayvanHissedar WHERE HayvanID = {hayvanID})", baglanti);
-            updateAtandi.ExecuteNonQuery();
+                // hayvanhissedar ilişki tablosundan sil
+                SqlCommand silHissedarlar = new SqlCommand($"DELETE FROM HayvanHissedar WHERE HayvanID = {hayvanID}", baglanti);
+                silHissedarlar.ExecuteNonQuery();
 
-            // hayvanhissedar ilişki tablosundan sil
-            SqlCommand silHissedarlar = new SqlCommand($"DELETE FROM HayvanHissedar WHERE HayvanID = {hayvanID}", baglanti);
-            silHissedarlar.ExecuteNonQuery();
+                // hayvanlar tablosundan sil
+                SqlCommand silHayvan = new SqlCommand($"DELETE FROM Hayvanlar WHERE Id = {hayvanID}", baglanti);
+                silHayvan.ExecuteNonQuery();
 
-            // hayvanlar tablosundan sil
-            SqlCommand silHayvan = new SqlCommand($"DELETE FROM Hayvanlar WHERE Id = {hayvanID}", baglanti);
-            silHayvan.ExecuteNonQuery();
-
-            baglanti.Close();
-            baglanti.Close();
+                baglanti.Close();
+            }
 
             hayvanTablosunuYukle();
         }
@@ -264,49 +273,52 @@ namespace kurbanv1
 
             if (dr == DialogResult.OK)
             {
-                SqlConnection baglanti = new SqlConnection(connectionString);
-
-                baglanti.Open();
+                string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "kurbanDB.mdf");
+                using (baglanti)
+                {
+                    baglanti.Open();
                 SqlTransaction transaction = baglanti.BeginTransaction();
 
-                try
-                {
-                    using (SqlCommand hayvanHissedarKomut = new SqlCommand("DELETE FROM HayvanHissedar", baglanti, transaction))
+                    try
                     {
-                        hayvanHissedarKomut.ExecuteNonQuery();
-                    }
+                        using (SqlCommand hayvanHissedarKomut = new SqlCommand("DELETE FROM HayvanHissedar", baglanti, transaction))
+                        {
+                            hayvanHissedarKomut.ExecuteNonQuery();
+                        }
 
-                    using (SqlCommand hayvanKomut = new SqlCommand("DELETE FROM Hayvanlar", baglanti, transaction))
+                        using (SqlCommand hayvanKomut = new SqlCommand("DELETE FROM Hayvanlar", baglanti, transaction))
+                        {
+                            hayvanKomut.ExecuteNonQuery();
+                        }
+
+                        using (SqlCommand hayvanKomut2 = new SqlCommand("DBCC CHECKIDENT('Hayvanlar', RESEED, 0)", baglanti, transaction))
+                        {
+                            hayvanKomut2.ExecuteNonQuery();
+                        }
+
+                        using (SqlCommand hayvanHissedarKomut2 = new SqlCommand("DBCC CHECKIDENT('HayvanHissedar', RESEED, 0)", baglanti, transaction))
+                        {
+                            hayvanHissedarKomut2.ExecuteNonQuery();
+                        }
+
+                        using (SqlCommand guncelle = new SqlCommand($"UPDATE Hissedarlar SET AtandiMi = 0", baglanti, transaction))
+                        {
+                            guncelle.ExecuteNonQuery();
+                        }
+
+                        transaction.Commit();
+                        hayvanTablosunuYukle();
+                    }
+                    catch (Exception ex)
                     {
-                        hayvanKomut.ExecuteNonQuery();
+                        transaction.Rollback();
+                        baglanti.Close();
+                        MessageBox.Show("Hata oluştu: " + ex.Message, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
-
-                    using (SqlCommand hayvanKomut2 = new SqlCommand("DBCC CHECKIDENT('Hayvanlar', RESEED, 0)", baglanti, transaction))
+                    finally
                     {
-                        hayvanKomut2.ExecuteNonQuery();
+                        baglanti.Close();
                     }
-
-                    using (SqlCommand hayvanHissedarKomut2 = new SqlCommand("DBCC CHECKIDENT('HayvanHissedar', RESEED, 0)", baglanti, transaction))
-                    {
-                        hayvanHissedarKomut2.ExecuteNonQuery();
-                    }
-
-                    using (SqlCommand guncelle = new SqlCommand($"UPDATE Hissedarlar SET AtandiMi = 0", baglanti, transaction))
-                    {
-                        guncelle.ExecuteNonQuery();
-                    }
-
-                    transaction.Commit();
-                    hayvanTablosunuYukle();
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                    MessageBox.Show("Hata oluştu: " + ex.Message, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-                finally
-                {
-                    baglanti.Close();
                 }
 
             }
@@ -317,6 +329,7 @@ namespace kurbanv1
             if (dataGridView1.SelectedRows.Count == 0)
             {
                 MessageBox.Show("Lütfen bir hayvan seçiniz.");
+                baglanti.Close();
                 return;
             }
 
@@ -328,6 +341,7 @@ namespace kurbanv1
 
         private void Form1_Load(object sender, EventArgs e)
         {
+
             hayvanTablosunuYukle();
         }
 

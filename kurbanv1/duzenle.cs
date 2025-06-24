@@ -15,8 +15,10 @@ namespace kurbanv1
 {
     public partial class duzenle : Form
     {
-        string connectionString = @"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;";
-        SqlConnection baglanti = new SqlConnection(@"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;");
+        static string data = Application.StartupPath;
+        static string connectionString = @$"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename={data}\kurbanDB.mdf;Initial Catalog=kurbanDB;Integrated Security=True;";
+        SqlConnection baglanti = new SqlConnection(connectionString);
+
         private int seciliHayvanID;
         //ana formda hayvanTablosunuYukle() çalıştırarak listeyi güncellemek için
         Form1 anaform;
@@ -43,35 +45,35 @@ namespace kurbanv1
         private void duzenle_Load(object sender, EventArgs e)
         {
             this.MaximizeBox = false;
-            string connectionString = @"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;";
-            SqlConnection baglanti = new SqlConnection(connectionString);
-
-            baglanti.Open();
-
-            // boştakileri ve bu hayvana atanmış hissedarları getir
-            SqlCommand komut = new SqlCommand($"SELECT Id, AdSoyad, Telefon, AgirlikAraligi FROM Hissedarlar WHERE AtandiMi = 0 OR Id IN (SELECT HissedarID FROM HayvanHissedar WHERE HayvanID = {seciliHayvanID})", baglanti);
-
-            SqlDataReader dr = komut.ExecuteReader();
-            while (dr.Read())
+            using (baglanti)
             {
-                checkedListBox1.Items.Add(new ListItem { Text = dr["AdSoyad"].ToString() + "\tTelefon: " + dr["Telefon"].ToString() + "\tGrup: " + dr["AgirlikAraligi"].ToString(), Value = Convert.ToInt32(dr["Id"]) });
-            }
-            dr.Close();
+                baglanti.Open();
 
-            // seçili hayvana atanmışları işaretle
-            SqlCommand seciliKomut = new SqlCommand($"SELECT HissedarID FROM HayvanHissedar WHERE HayvanID = {seciliHayvanID}", baglanti);
-            SqlDataReader dr2 = seciliKomut.ExecuteReader();
-            while (dr2.Read())
-            {
-                int hissedarID = Convert.ToInt32(dr2["HissedarID"]);
-                for (int i = 0; i < checkedListBox1.Items.Count; i++)
+                // boştakileri ve bu hayvana atanmış hissedarları getir
+                SqlCommand komut = new SqlCommand($"SELECT Id, AdSoyad, Telefon, AgirlikAraligi FROM Hissedarlar WHERE AtandiMi = 0 OR Id IN (SELECT HissedarID FROM HayvanHissedar WHERE HayvanID = {seciliHayvanID})", baglanti);
+
+                SqlDataReader dr = komut.ExecuteReader();
+                while (dr.Read())
                 {
-                    if (((ListItem)checkedListBox1.Items[i]).Value == hissedarID)
-                        checkedListBox1.SetItemChecked(i, true);
+                    checkedListBox1.Items.Add(new ListItem { Text = dr["AdSoyad"].ToString() + "\tTelefon: " + dr["Telefon"].ToString() + "\tGrup: " + dr["AgirlikAraligi"].ToString(), Value = Convert.ToInt32(dr["Id"]) });
                 }
+                dr.Close();
+
+                // seçili hayvana atanmışları işaretle
+                SqlCommand seciliKomut = new SqlCommand($"SELECT HissedarID FROM HayvanHissedar WHERE HayvanID = {seciliHayvanID}", baglanti);
+                SqlDataReader dr2 = seciliKomut.ExecuteReader();
+                while (dr2.Read())
+                {
+                    int hissedarID = Convert.ToInt32(dr2["HissedarID"]);
+                    for (int i = 0; i < checkedListBox1.Items.Count; i++)
+                    {
+                        if (((ListItem)checkedListBox1.Items[i]).Value == hissedarID)
+                            checkedListBox1.SetItemChecked(i, true);
+                    }
+                }
+                dr2.Close();
+                baglanti.Close();
             }
-            dr2.Close();
-            baglanti.Close();
 
         }
 
@@ -82,32 +84,35 @@ namespace kurbanv1
                 MessageBox.Show("En az 1 hissedar seçilmeli.", "Hata!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            baglanti.Open();
-
-            // ilişki ve hissedarlar tablosunda bu hayvana ait olan girdileri temizle
-            SqlCommand sifirlaKomut = new SqlCommand($"UPDATE Hissedarlar SET AtandiMi = 0 WHERE Id IN (SELECT HissedarID FROM HayvanHissedar WHERE HayvanID = {seciliHayvanID})", baglanti);
-            sifirlaKomut.ExecuteNonQuery();
-            SqlCommand silKomut = new SqlCommand($"DELETE FROM HayvanHissedar WHERE HayvanID = {seciliHayvanID}", baglanti);
-            silKomut.ExecuteNonQuery();
-
-            // ilişki ve hissedar tablosuna tekrar yaz
-            foreach (var item in checkedListBox1.CheckedItems)
+            using (baglanti)
             {
-                int hissedarID = ((ListItem)item).Value;
+                baglanti.Open();
 
-                SqlCommand ekleKomut = new SqlCommand($"INSERT INTO HayvanHissedar (HayvanID, HissedarID) VALUES ({seciliHayvanID}, {hissedarID})", baglanti);
-                ekleKomut.ExecuteNonQuery();
+                // ilişki ve hissedarlar tablosunda bu hayvana ait olan girdileri temizle
+                SqlCommand sifirlaKomut = new SqlCommand($"UPDATE Hissedarlar SET AtandiMi = 0 WHERE Id IN (SELECT HissedarID FROM HayvanHissedar WHERE HayvanID = {seciliHayvanID})", baglanti);
+                sifirlaKomut.ExecuteNonQuery();
+                SqlCommand silKomut = new SqlCommand($"DELETE FROM HayvanHissedar WHERE HayvanID = {seciliHayvanID}", baglanti);
+                silKomut.ExecuteNonQuery();
 
-                SqlCommand atandiKomut = new SqlCommand($"UPDATE Hissedarlar SET AtandiMi = 1 WHERE Id = {hissedarID}", baglanti);
-                atandiKomut.ExecuteNonQuery();
+                // ilişki ve hissedar tablosuna tekrar yaz
+                foreach (var item in checkedListBox1.CheckedItems)
+                {
+                    int hissedarID = ((ListItem)item).Value;
+
+                    SqlCommand ekleKomut = new SqlCommand($"INSERT INTO HayvanHissedar (HayvanID, HissedarID) VALUES ({seciliHayvanID}, {hissedarID})", baglanti);
+                    ekleKomut.ExecuteNonQuery();
+
+                    SqlCommand atandiKomut = new SqlCommand($"UPDATE Hissedarlar SET AtandiMi = 1 WHERE Id = {hissedarID}", baglanti);
+                    atandiKomut.ExecuteNonQuery();
+                }
+
+                SqlCommand kisiBasiEtGuncelle = new SqlCommand($"UPDATE Hayvanlar SET KisiBasiEt = ToplamEt / (SELECT COUNT(*) FROM HayvanHissedar WHERE HayvanID = {seciliHayvanID}) WHERE Id = {seciliHayvanID}", baglanti);
+                kisiBasiEtGuncelle.ExecuteNonQuery();
+
+                // ana formu güncelle
+                anaform.hayvanTablosunuYukle();
+                baglanti.Close();
             }
-
-            SqlCommand kisiBasiEtGuncelle = new SqlCommand($"UPDATE Hayvanlar SET KisiBasiEt = ToplamEt / (SELECT COUNT(*) FROM HayvanHissedar WHERE HayvanID = {seciliHayvanID}) WHERE Id = {seciliHayvanID}", baglanti);
-            kisiBasiEtGuncelle.ExecuteNonQuery();
-
-            // ana formu güncelle
-            anaform.hayvanTablosunuYukle();
-            baglanti.Close();
 
         }
 

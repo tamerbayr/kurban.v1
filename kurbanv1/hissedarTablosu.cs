@@ -9,13 +9,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+
+
 namespace kurbanv1
 {
     public partial class hissedarTablosu : Form
     {
         DataTable hissedarTab = new DataTable();
-        SqlConnection baglanti = new SqlConnection(@"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;");
-        string connectionString = @"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;";
+        static string data = Application.StartupPath;
+        static string connectionString = @$"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename={data}\kurbanDB.mdf;Initial Catalog=kurbanDB;Integrated Security=True;";
+        SqlConnection baglanti = new SqlConnection(connectionString);
         public hissedarTablosu()
         {
             InitializeComponent();
@@ -58,12 +61,15 @@ namespace kurbanv1
             }
             else
             {
-                baglanti.Open();
-                SqlCommand komut = new SqlCommand($"INSERT INTO Hissedarlar (AdSoyad, Telefon, AgirlikAraligi, AtandiMi) VALUES ('{txtAdSoyad.Text}', '{txtTelNo.Text}', '{comboGrup.SelectedItem.ToString()}', 0)", baglanti);
-                komut.ExecuteNonQuery();
+                using (baglanti)
+                {
+                    baglanti.Open();
+                    SqlCommand komut = new SqlCommand($"INSERT INTO Hissedarlar (AdSoyad, Telefon, AgirlikAraligi, AtandiMi) VALUES ('{txtAdSoyad.Text}', '{txtTelNo.Text}', '{comboGrup.SelectedItem.ToString()}', 0)", baglanti);
+                    komut.ExecuteNonQuery();
 
-                hissedarTablosunuYukle();
-                baglanti.Close();
+                    hissedarTablosunuYukle();
+                    baglanti.Close();
+                }
 
                 // sonraki girdi için textboxları boşalt
                 txtAdSoyad.Text = "";
@@ -86,13 +92,16 @@ namespace kurbanv1
 
                 if (secili != null)
                 {
-                    baglanti.Open();
-                    int seciliID = Convert.ToInt32(secili);
-                    SqlCommand komut = new SqlCommand($"DELETE FROM Hissedarlar WHERE ID = {seciliID}", baglanti);
-                    komut.ExecuteNonQuery();
+                    using (baglanti)
+                    {
+                        baglanti.Open();
+                        int seciliID = Convert.ToInt32(secili);
+                        SqlCommand komut = new SqlCommand($"DELETE FROM Hissedarlar WHERE ID = {seciliID}", baglanti);
+                        komut.ExecuteNonQuery();
 
-                    hissedarTablosunuYukle();
-                    baglanti.Close();
+                        hissedarTablosunuYukle();
+                        baglanti.Close();
+                    }
                 }
                 else
                 {
@@ -136,19 +145,19 @@ namespace kurbanv1
             {
                 try
                 {
-                    using (SqlConnection conn = new SqlConnection(connectionString))
+                    using (baglanti)
                     {
-                        conn.Open();
-                        using (SqlTransaction transaction = conn.BeginTransaction())
+                        baglanti.Open();
+                        using (SqlTransaction transaction = baglanti.BeginTransaction())
                         {
                             try
                             {
-                                using (SqlCommand komut = new SqlCommand("DELETE FROM Hissedarlar", conn, transaction))
+                                using (SqlCommand komut = new SqlCommand("DELETE FROM Hissedarlar", baglanti, transaction))
                                 {
                                     komut.ExecuteNonQuery();
                                 }
 
-                                using (SqlCommand komut2 = new SqlCommand("DBCC CHECKIDENT('Hissedarlar', RESEED, 0)", conn, transaction))
+                                using (SqlCommand komut2 = new SqlCommand("DBCC CHECKIDENT('Hissedarlar', RESEED, 0)", baglanti, transaction))
                                 {
                                     komut2.ExecuteNonQuery();
                                 }
@@ -162,12 +171,19 @@ namespace kurbanv1
                                 transaction.Rollback();
                                 throw;
                             }
+                            finally {
+                                baglanti.Close();
+                            }
                         }
                     }
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show("Hata oluştu: " + ex.Message, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally 
+                {
+                    baglanti.Close();
                 }
             }
         }
