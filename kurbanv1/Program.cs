@@ -1,3 +1,5 @@
+using System.Data.SqlClient;
+
 namespace kurbanv1
 {
     internal static class Program
@@ -8,6 +10,7 @@ namespace kurbanv1
         [STAThread]
         static void Main()
         {
+            VeritabaniIslemleri.VeritabaniKontrolVeKurulum();
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();

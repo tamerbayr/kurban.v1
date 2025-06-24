@@ -5,6 +5,12 @@ namespace kurbanv1
 {
     public partial class Form1 : Form
     {
+        public void VeritabaniKontrolVeKurulum()
+        {
+
+        }
+
+        
         private DataTable hayvanTablosu = new DataTable();
         string connectionString = @"Server=.\SQLEXPRESS;Database=KurbanDB;Trusted_Connection=True;";
 
