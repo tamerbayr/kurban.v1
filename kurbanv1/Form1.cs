@@ -21,7 +21,6 @@ namespace kurbanv1
             using (SqlConnection baglanti = new SqlConnection(connectionString))
             {
                 baglanti.Open();
-                /*  bu da çalışıyor
                 SqlCommand sqlcommand = new SqlCommand(@"SELECT 
                                      H.Id AS HayvanID, 
                                      H.Agirlik, 
@@ -40,24 +39,6 @@ namespace kurbanv1
                 hayvanTablosu.Clear();
                 da.Fill(hayvanTablosu);
                 dataGridView1.DataSource = hayvanTablosu;
-                */
-                SqlDataAdapter da = new SqlDataAdapter(@"SELECT 
-                                     H.Id AS HayvanID, 
-                                     H.Agirlik, 
-                                     H.RandimanOrani, 
-                                     H.ToplamEt,
-                                     H.KisiBasiEt,
-                                     H.HissedarAdedi AS BeklenenHissedarSayisi,
-                                     COUNT(DISTINCT HH.HissedarID) AS AtananHissedarSayisi,
-                                     ISNULL(STRING_AGG(Hs.AdSoyad + ' (' + Hs.Telefon + ')', ', '), 'Atama Yok') AS Hissedarlar
-                                     FROM Hayvanlar H
-                                     LEFT JOIN HayvanHissedar HH ON H.Id = HH.HayvanID
-                                     LEFT JOIN Hissedarlar Hs ON Hs.Id = HH.HissedarID
-                                     GROUP BY H.Id, H.Agirlik, H.RandimanOrani, H.ToplamEt, H.KisiBasiEt, H.HissedarAdedi
-                                     ORDER BY H.Id", baglanti);
-                DataTable dt = new DataTable();
-                da.Fill(dt);
-                dataGridView1.DataSource = dt;
 
                 // nedense boyutları düzenlemiyor
                 dataGridView1.Columns[0].Width = (int)(dataGridView1.Width * 0.05);
