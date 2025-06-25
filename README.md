@@ -18,7 +18,7 @@ KurbanV1, .NET 6 ve C# 10 ile geliştirilmiş, Windows Forms tabanlı bir hissed
    - SQL Server 22 (ör. SQLEXPRESS) [https://download.microsoft.com/download/5/1/4/5145fe04-4d30-4b85-b0d1-39533663a2f1/SQL2022-SSEI-Expr.exe](url)
 
 2. **Kurulum:**
-   Kuruluma ihtiyaç duymaz. Kurbanv1.exe dosyasını çalıştırın.
+   "kurbanv1-dependant.rar" versiyonunu kullanmanız önerilir.Kuruluma ihtiyaç duymaz. Kurbanv1.exe dosyasını çalıştırın.
 
 3. **Veritabanı:**
    - Uygulama, `.\SQLEXPRESS` sunucusuna ve `KurbanDB` veritabanına bağlanacak şekilde ayarlanmıştır.
