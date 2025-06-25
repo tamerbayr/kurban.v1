@@ -14,8 +14,8 @@ KurbanV1, .NET 6 ve C# 10 ile geliştirilmiş, Windows Forms tabanlı bir hissed
 ## Kurulum
 
 1. **Gereksinimler:**
-   - .NET 6.0.36 runtime [https://dotnet.microsoft.com/en-us/download/dotnet/6.0/runtime](url)
-   - SQL Server 22 (ör. SQLEXPRESS) [https://download.microsoft.com/download/5/1/4/5145fe04-4d30-4b85-b0d1-39533663a2f1/SQL2022-SSEI-Expr.exe](url)
+   - [.NET 6.0.36 runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0/runtime)
+   - [SQL Server 22 (ör. SQLEXPRESS, external media -> localdb yeterli)](https://download.microsoft.com/download/5/1/4/5145fe04-4d30-4b85-b0d1-39533663a2f1/SQL2022-SSEI-Expr.exe)
 
 2. **Kurulum:**
    "kurbanv1-dependant.rar" versiyonunu kullanmanız önerilir.Kuruluma ihtiyaç duymaz. Kurbanv1.exe dosyasını çalıştırın.
