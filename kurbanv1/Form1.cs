@@ -171,7 +171,14 @@ namespace kurbanv1
                 kisiBasiEt = toplamEt / hissedarIDs.Count;
 
                 // hayvan tablosuna ekle
-                SqlCommand hayvanKomut = new SqlCommand($"INSERT INTO Hayvanlar (Agirlik, RandimanOrani, HissedarAdedi, ToplamEt, KisiBasiEt) VALUES ({toplamAgirlik}, {randimanOran}, {hisseAdet}, {toplamEt}, {kisiBasiEt}); SELECT SCOPE_IDENTITY();", baglanti);
+                SqlCommand hayvanKomut = new SqlCommand("INSERT INTO Hayvanlar (Agirlik, RandimanOrani, HissedarAdedi, ToplamEt, KisiBasiEt) VALUES (@Agirlik, @RandimanOrani, @HissedarAdedi, @ToplamEt, @KisiBasiEt); SELECT SCOPE_IDENTITY();", baglanti);
+                hayvanKomut.Parameters.AddWithValue("@Agirlik", toplamAgirlik);
+                hayvanKomut.Parameters.AddWithValue("@RandimanOrani", randimanOran);
+                hayvanKomut.Parameters.AddWithValue("@HissedarAdedi", hisseAdet);
+                hayvanKomut.Parameters.AddWithValue("@ToplamEt", toplamEt);
+                hayvanKomut.Parameters.AddWithValue("@KisiBasiEt", kisiBasiEt);
+
+
 
                 // hayvanhissedar ilişki tablosuna ekle
                 int yeniHayvanID = Convert.ToInt32(hayvanKomut.ExecuteScalar());

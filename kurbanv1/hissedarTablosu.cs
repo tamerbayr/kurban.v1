@@ -64,7 +64,11 @@ namespace kurbanv1
                 using (SqlConnection baglanti = new SqlConnection(connectionString))
                 {
                     baglanti.Open();
-                    SqlCommand komut = new SqlCommand($"INSERT INTO Hissedarlar (AdSoyad, Telefon, AgirlikAraligi, AtandiMi) VALUES ('{txtAdSoyad.Text}', '{txtTelNo.Text}', '{comboGrup.SelectedItem.ToString()}', 0)", baglanti);
+                    SqlCommand komut = new SqlCommand("INSERT INTO Hissedarlar (AdSoyad, Telefon, AgirlikAraligi, AtandiMi) VALUES (@AdSoyad, @Telefon, @AgirlikAraligi, @AtandiMi)", baglanti);
+                    komut.Parameters.AddWithValue("@AdSoyad", txtAdSoyad.Text);
+                    komut.Parameters.AddWithValue("@Telefon", txtTelNo.Text);
+                    komut.Parameters.AddWithValue("@AgirlikAraligi", comboGrup.SelectedItem.ToString());
+                    komut.Parameters.AddWithValue("@AtandiMi", 0);
                     komut.ExecuteNonQuery();
 
                     hissedarTablosunuYukle();

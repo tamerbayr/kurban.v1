@@ -99,7 +99,9 @@ namespace kurbanv1
                 {
                     int hissedarID = ((ListItem)item).Value;
 
-                    SqlCommand ekleKomut = new SqlCommand($"INSERT INTO HayvanHissedar (HayvanID, HissedarID) VALUES ({seciliHayvanID}, {hissedarID})", baglanti);
+                    SqlCommand ekleKomut = new SqlCommand("INSERT INTO HayvanHissedar (HayvanID, HissedarID) VALUES (@hayvanID, @HissedarID)", baglanti);
+                    ekleKomut.Parameters.AddWithValue("@hayvanID", seciliHayvanID);
+                    ekleKomut.Parameters.AddWithValue("@HissedarID", hissedarID);
                     ekleKomut.ExecuteNonQuery();
 
                     SqlCommand atandiKomut = new SqlCommand($"UPDATE Hissedarlar SET AtandiMi = 1 WHERE Id = {hissedarID}", baglanti);
