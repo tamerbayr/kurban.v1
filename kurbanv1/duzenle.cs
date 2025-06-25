@@ -45,7 +45,7 @@ namespace kurbanv1
         private void duzenle_Load(object sender, EventArgs e)
         {
             this.MaximizeBox = false;
-            using (baglanti)
+            using (SqlConnection baglanti = new SqlConnection(connectionString))
             {
                 baglanti.Open();
 
@@ -84,7 +84,7 @@ namespace kurbanv1
                 MessageBox.Show("En az 1 hissedar seçilmeli.", "Hata!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            using (baglanti)
+            using (SqlConnection baglanti = new SqlConnection(connectionString))
             {
                 baglanti.Open();
 

@@ -61,7 +61,7 @@ namespace kurbanv1
             }
             else
             {
-                using (baglanti)
+                using (SqlConnection baglanti = new SqlConnection(connectionString))
                 {
                     baglanti.Open();
                     SqlCommand komut = new SqlCommand($"INSERT INTO Hissedarlar (AdSoyad, Telefon, AgirlikAraligi, AtandiMi) VALUES ('{txtAdSoyad.Text}', '{txtTelNo.Text}', '{comboGrup.SelectedItem.ToString()}', 0)", baglanti);
@@ -92,7 +92,7 @@ namespace kurbanv1
 
                 if (secili != null)
                 {
-                    using (baglanti)
+                    using (SqlConnection baglanti = new SqlConnection(connectionString))
                     {
                         baglanti.Open();
                         int seciliID = Convert.ToInt32(secili);
@@ -145,7 +145,7 @@ namespace kurbanv1
             {
                 try
                 {
-                    using (baglanti)
+                    using (SqlConnection baglanti = new SqlConnection(connectionString))
                     {
                         baglanti.Open();
                         using (SqlTransaction transaction = baglanti.BeginTransaction())

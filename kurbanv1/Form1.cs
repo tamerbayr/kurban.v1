@@ -24,7 +24,7 @@ namespace kurbanv1
         public void hayvanTablosunuYukle()
         {
             string dbPath =  @$"{AppDomain.CurrentDomain.BaseDirectory}\kurbanDB.mdf";
-            using (baglanti)
+            using (SqlConnection baglanti = new SqlConnection(connectionString))
             {
                 baglanti.Open();
                 SqlCommand sqlcommand = new SqlCommand(@"SELECT 
@@ -143,7 +143,7 @@ namespace kurbanv1
 
             // veritabanı işlemi
             string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "kurbanDB.mdf");
-            using (baglanti)
+            using (SqlConnection baglanti = new SqlConnection(connectionString))
             {
                 baglanti.Open();
                 SqlCommand hisseKomut = new SqlCommand($"SELECT TOP {hisseAdet} * FROM Hissedarlar WHERE AtandiMi = 0 AND AgirlikAraligi = '{grupTabloAdi}'", baglanti);
@@ -166,6 +166,9 @@ namespace kurbanv1
                     DialogResult dr1 = MessageBox.Show($"İstenen hissedar sayısı ({hisseAdet}), kalan hissedar sayısından ({hissedarIDs.Count}) fazla.\nDevam edilsin mi?", "Eksik Hissedar", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                     if (dr1 == DialogResult.No) { baglanti.Close(); return; }
                 }
+                
+                // hissedar sayısı yetersiz olabileceğinden kişibaşıet değerini güncelle
+                kisiBasiEt = toplamEt / hissedarIDs.Count;
 
                 // hayvan tablosuna ekle
                 SqlCommand hayvanKomut = new SqlCommand($"INSERT INTO Hayvanlar (Agirlik, RandimanOrani, HissedarAdedi, ToplamEt, KisiBasiEt) VALUES ({toplamAgirlik}, {randimanOran}, {hisseAdet}, {toplamEt}, {kisiBasiEt}); SELECT SCOPE_IDENTITY();", baglanti);
@@ -221,7 +224,7 @@ namespace kurbanv1
             int hayvanID = Convert.ToInt32(dataGridView1.CurrentRow.Cells["HayvanID"].Value);
             string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "kurbanDB.mdf");
 
-            using (baglanti)
+            using (SqlConnection baglanti = new SqlConnection(connectionString))
             {
                 baglanti.Open();
 
@@ -274,7 +277,7 @@ namespace kurbanv1
             if (dr == DialogResult.OK)
             {
                 string dbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "kurbanDB.mdf");
-                using (baglanti)
+                using (SqlConnection baglanti = new SqlConnection(connectionString))
                 {
                     baglanti.Open();
                 SqlTransaction transaction = baglanti.BeginTransaction();
